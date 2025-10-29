@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TeacherWindow</class>
+ <widget class="QDialog" name="TeacherWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>903</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Личный кабинет преподавателя</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="welcomeLabel">
+     <property name="styleSheet">
+      <string notr="true">font-size: 16pt; font-weight: bold; color: #2c3e50; padding: 10px;</string>
+     </property>
+     <property name="text">
+      <string>Добро пожаловать, [Имя преподавателя]</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="subjectLabel">
+     <property name="styleSheet">
+      <string notr="true">font-size: 12pt; color: #7f8c8d; margin-bottom: 10px;</string>
+     </property>
+     <property name="text">
+      <string>Предмет: [Название предмета]</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="searchLayout">
+     <item>
+      <widget class="QLineEdit" name="searchField">
+       <property name="styleSheet">
+        <string notr="true">padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px;</string>
+       </property>
+       <property name="placeholderText">
+        <string>Поиск по названию теста...</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="filterComboBox">
+       <property name="styleSheet">
+        <string notr="true">padding: 8px; min-width: 150px;</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Все тесты</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>С высоким рейтингом</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>С низким рейтингом</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonLayout">
+     <item>
+      <widget class="QPushButton" name="importButton">
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    padding: 10px 15px;
+    font-weight: bold;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+QPushButton:hover {
+    background-color: #2980b9;
+}
+QPushButton:pressed {
+    background-color: #21618c;
+}</string>
+       </property>
+       <property name="text">
+        <string>📁 Добавить тест из файла</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="deleteButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    padding: 10px 15px;
+    font-weight: bold;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+QPushButton:hover {
+    background-color: #c0392b;
+}
+QPushButton:pressed {
+    background-color: #a93226;
+}
+QPushButton:disabled {
+    background-color: #95a5a6;
+}</string>
+       </property>
+       <property name="text">
+        <string>🗑️ Удалить тест</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="statsButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    padding: 10px 15px;
+    font-weight: bold;
+    background-color: #9b59b6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+QPushButton:hover {
+    background-color: #8e44ad;
+}
+QPushButton:pressed {
+    background-color: #7d3c98;
+}
+QPushButton:disabled {
+    background-color: #95a5a6;
+}</string>
+       </property>
+       <property name="text">
+        <string>📊 Статистика теста</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="previewButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    padding: 10px 15px;
+    font-weight: bold;
+    background-color: #f39c12;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+QPushButton:hover {
+    background-color: #e67e22;
+}
+QPushButton:pressed {
+    background-color: #d35400;
+}
+QPushButton:disabled {
+    background-color: #95a5a6;
+}</string>
+       </property>
+       <property name="text">
+        <string>👁️ Предпросмотр</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="refreshButton">
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    padding: 10px 15px;
+    font-weight: bold;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+QPushButton:hover {
+    background-color: #229954;
+}
+QPushButton:pressed {
+    background-color: #1e8449;
+}</string>
+       </property>
+       <property name="text">
+        <string>🔄 Обновить</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTableWidget" name="testsTable">
+     <property name="styleSheet">
+      <string notr="true">QTableWidget {
+    background-color: white;
+    alternate-background-color: #f8f9fa;
+    gridline-color: #dee2e6;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+QTableWidget::item {
+    padding: 8px;
+    border-bottom: 1px solid #dee2e6;
+}
+QTableWidget::item:selected {
+    background-color: #3498db;
+    color: white;
+}
+QHeaderView::section {
+    background-color: #34495e;
+    color: white;
+    padding: 10px;
+    border: none;
+    font-weight: bold;
+}
+QTableWidget QScrollBar:vertical {
+    border: none;
+    background-color: #ecf0f1;
+    width: 12px;
+    margin: 0px;
+}
+QTableWidget QScrollBar::handle:vertical {
+    background-color: #bdc3c7;
+    border-radius: 6px;
+    min-height: 20px;
+}
+QTableWidget QScrollBar::handle:vertical:hover {
+    background-color: #95a5a6;
+}</string>
+     </property>
+     <property name="editTriggers">
+      <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+     </property>
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+     </property>
+     <property name="showGrid">
+      <bool>true</bool>
+     </property>
+     <property name="gridStyle">
+      <enum>Qt::PenStyle::SolidLine</enum>
+     </property>
+     <property name="wordWrap">
+      <bool>false</bool>
+     </property>
+     <property name="rowCount">
+      <number>1</number>
+     </property>
+     <property name="columnCount">
+      <number>6</number>
+     </property>
+     <attribute name="horizontalHeaderVisible">
+      <bool>true</bool>
+     </attribute>
+     <attribute name="horizontalHeaderCascadingSectionResizes">
+      <bool>false</bool>
+     </attribute>
+     <attribute name="horizontalHeaderHighlightSections">
+      <bool>true</bool>
+     </attribute>
+     <attribute name="horizontalHeaderStretchLastSection">
+      <bool>true</bool>
+     </attribute>
+     <attribute name="verticalHeaderVisible">
+      <bool>false</bool>
+     </attribute>
+     <attribute name="verticalHeaderHighlightSections">
+      <bool>true</bool>
+     </attribute>
+     <row/>
+     <column>
+      <property name="text">
+       <string>ID</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Название теста</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Предмет</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Вопросы</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Попытки</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Средний балл</string>
+      </property>
+     </column>
+     <item row="0" column="0">
+      <property name="text">
+       <string>1</string>
+      </property>
+     </item>
+     <item row="0" column="1">
+      <property name="text">
+       <string>хубабуба</string>
+      </property>
+     </item>
+     <item row="0" column="2">
+      <property name="text">
+       <string>русски</string>
+      </property>
+     </item>
+     <item row="0" column="3">
+      <property name="text">
+       <string>24</string>
+      </property>
+     </item>
+     <item row="0" column="4">
+      <property name="text">
+       <string>190</string>
+      </property>
+     </item>
+     <item row="0" column="5">
+      <property name="text">
+       <string>100</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="bottomLayout">
+     <item>
+      <widget class="QLabel" name="infoLabel">
+       <property name="styleSheet">
+        <string notr="true">color: #7f8c8d; font-style: italic;</string>
+       </property>
+       <property name="text">
+        <string>Всего тестов: 0</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="closeButton">
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    padding: 8px 20px;
+    background-color: #95a5a6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+QPushButton:hover {
+    background-color: #7f8c8d;
+}</string>
+       </property>
+       <property name="text">
+        <string>Закрыть</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>closeButton</sender>
+   <signal>clicked()</signal>
+   <receiver>TeacherWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

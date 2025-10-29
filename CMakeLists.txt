@@ -31,8 +31,22 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 
         src/Lesson/lessonWindow.ui
 
-        src/Teacher/teacherwindow.h src/Teacher/teacherwindow.cpp src/Teacher/teacherwindow.ui
+        src/Teacher/teacherwindow.h src/Teacher/teacherwindow.cpp
         src/Lesson/lessonwindow.h src/Lesson/lessonwindow.cpp src/Lesson/lessonwindow.ui
+
+
+
+        src/Test/test.h src/Test/test.cpp
+        src/Question/question.h src/Question/question.cpp
+        src/Question/choicequestion.h src/Question/choicequestion.cpp
+        src/Question/singlechoicequestion.h src/Question/singlechoicequestion.cpp
+        src/Question/multiplechoicequestion.h src/Question/multiplechoicequestion.cpp
+        src/Question/textquestion.h src/Question/textquestion.cpp
+        src/Test/testparser.h src/Test/testparser.cpp
+        src/Teacher/teacherwindow.ui
+
+
+
 
 
 

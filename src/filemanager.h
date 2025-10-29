@@ -6,6 +6,7 @@
 #include "User/nameduser.h"
 #include "User/student.h"
 #include "User/teacher.h"
+#include "Test/test.h"
 
 class FileManager {
 private:
@@ -24,16 +25,18 @@ public:
     bool checkUser(const User* in);
     bool userExists(const QString& login);
     QList<NamedUser*> loadAllUsers();
-/*
+
     // Работа с тестами
-    bool saveTest(const Test& test);
-    QList<Test> loadAllTests();
-    QList<Test> loadTestsBySubject(const QString& subject);
-    QList<Test> loadTestsByTeacher(const QString& teacherLogin);
-*/
+    bool saveTest(Test* test);
+    Test* loadTest(int testId);
+    QList<Test*> loadAllTests();
+    QList<Test*> loadTestsByTeacher(const QString& teacherLogin);
+    QList<Test*> loadTestsBySubject(const QString& subject);
+    int getNextTestId();
+
     // Работа с результатами
     bool saveTestResult(const QString& studentLogin, int testId, double score);
-    double calculateStudentAverage(const QString& studentLogin);
-    QList<QPair<int, double>> getStudentResults(const QString& studentLogin);
+    double calculateTestAverage(int testId);
+    QList<QPair<QString, double>> getTestResults(int testId);
 };
 #endif // FILEMANAGER_H
