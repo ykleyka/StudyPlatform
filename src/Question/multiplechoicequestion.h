@@ -15,5 +15,13 @@ public:
     bool checkAnswer(const QString& answer) const override;
     QStringList getCorrectAnswers() const override;
     QString getDisplayType() const override { return "Множественный выбор"; }
+    QString getCorrectIndices() const {
+        QString res;
+        for (int idx : correctIndices) {
+            res.append(QString::number(idx) + ";");
+        }
+        return res;
+    }
+
 };
 #endif // MULTIPLECHOICEQUESTION_H

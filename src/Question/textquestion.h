@@ -23,6 +23,7 @@ public:
     }
 
     QString getDisplayType() const override { return "Текстовый ответ"; }
+    QString getCorrectAnswer() const { return correctAnswer; }
 };
 
 #endif // TEXTQUESTION_H

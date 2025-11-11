@@ -42,6 +42,7 @@ public:
 
     // Геттеры
     int getId() const { return testId; }
+    void setId(int id) { testId = id; }
     QString getTitle() const { return title; }
     QString getSubject() const { return subject; }
     QString getTeacherLogin() const { return teacherLogin; }

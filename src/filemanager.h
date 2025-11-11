@@ -7,13 +7,15 @@
 #include "User/student.h"
 #include "User/teacher.h"
 #include "Test/test.h"
+#include "Test/testparser.h"
 
 class FileManager {
 private:
-    QString dirPath = "C:/Users/Administrator/Documents/untitled/data";
-    QString usersFile = dirPath + "/users.txt";
-    QString testsFile = dirPath + "/tests.txt";
-    QString resultsFile = dirPath + "/results.txt";
+    QString dataDir = "C:/Users/Administrator/Documents/untitled/data";
+    QString usersFile = dataDir + "/users.txt";
+    QString testsFile = dataDir + "/tests.txt";
+    QString resultsFile = dataDir + "/results.txt";
+    QString testsDataDir = dataDir + "/tests";
 
 public:
     bool initDataDirectory();
@@ -29,14 +31,20 @@ public:
     // Работа с тестами
     bool saveTest(Test* test);
     Test* loadTest(int testId);
+    void createQuestionFromData(const QMap<QString, QString>& data, Test* test);
     QList<Test*> loadAllTests();
     QList<Test*> loadTestsByTeacher(const QString& teacherLogin);
-    QList<Test*> loadTestsBySubject(const QString& subject);
     int getNextTestId();
+    bool deleteTest(int testId);
 
     // Работа с результатами
     bool saveTestResult(const QString& studentLogin, int testId, double score);
     double calculateTestAverage(int testId);
     QList<QPair<QString, double>> getTestResults(int testId);
+    int getTestAttemptCount(int testId);
+    double getTestAverageScore(int testId);
+
+    // Импорт теста
+    Test* importTestFromFile(const QString& filename, const QString& teacherLogin, QString& errorMessage);
 };
 #endif // FILEMANAGER_H

@@ -22,6 +22,7 @@ public:
     }
 
     QString getDisplayType() const override { return "Одиночный выбор"; }
+    int getCorrectIndex() const { return correctIndex; }
 };
 
 #endif // SINGLECHOICEQUESTION_H
