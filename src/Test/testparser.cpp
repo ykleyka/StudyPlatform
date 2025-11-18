@@ -5,40 +5,26 @@ TestParser::TestParser() {
     successfullyParsed = 0;
 }
 
-Test* TestParser::parseTestFromFile(const QString& filename, const QString& teacherLogin) {
+void TestParser::parseTestQuestions(QString filename, Test* test) {
     lastError.clear();
     successfullyParsed = 0;
 
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         setError("Не удалось открыть файл: " + filename);
-        return nullptr;
+        return;
     }
 
     QTextStream in(&file);
-    in.setEncoding(QStringConverter::Utf8);
 
-    // Читаем первую строку с метаданными теста
     if (in.atEnd()) {
         setError("Файл пуст");
-        return nullptr;
+        return;
     }
 
-    QString headerLine = in.readLine().trimmed();
-    QStringList headerParts = headerLine.split(';');
+    // Пропускаем первую строку
+    in.readLine();
 
-    if (headerParts.size() < 3) {
-        setError("Неверный формат заголовка теста");
-        return nullptr;
-    }
-
-    QString title = headerParts[0].trimmed();
-    QString subject = headerParts[1].trimmed();
-
-    // Создаем тест
-    Test* test = new Test(-1, title, subject, teacherLogin);
-
-    // Читаем вопросы
     while (!in.atEnd()) {
         QString line = in.readLine().trimmed();
         if (line.isEmpty()) continue;
@@ -52,14 +38,14 @@ Test* TestParser::parseTestFromFile(const QString& filename, const QString& teac
 
     file.close();
 
-    if (!successfullyParsed) {
+    if (successfullyParsed == 0) {
         setError("В файле не найдено вопросов");
         delete test;
-        return NULL;
+        return;
     }
 
     qDebug() << "Успешно распарсено вопросов:" << successfullyParsed;
-    return test;
+    return;
 }
 
 Question* TestParser::parseQuestionLine(const QString& line) {
@@ -67,13 +53,12 @@ Question* TestParser::parseQuestionLine(const QString& line) {
 
     if (parts.size() < 5) {
         qWarning() << "Недостаточно данных для вопроса:" << line;
-        return nullptr;
+        return NULL;
     }
 
     QString type = parts[0].trimmed().toLower();
     QString text = parts[1].trimmed();
 
-    // Парсим баллы (просто пытаемся преобразовать, без проверок)
     int points = parts[2].toInt();
     if (points <= 0) points = 1; // Минимум 1 балл
 
@@ -85,7 +70,7 @@ Question* TestParser::parseQuestionLine(const QString& line) {
         return parseTextQuestion(parts, text, points);
     } else {
         qWarning() << "Неизвестный тип вопроса:" << type;
-        return nullptr;
+        return NULL;
     }
 }
 
@@ -93,7 +78,7 @@ Question* TestParser::parseSingleChoice(const QStringList& parts, const QString&
     // Формат: single;текст;баллы;кол-во вариантов;правильный индекс;вар1;вар2;...
     if (parts.size() < 6) {
         qWarning() << "Недостаточно данных для single choice:" << parts.join(";");
-        return nullptr;
+        return NULL;
     }
 
     int optionsCount = parts[3].toInt();
@@ -120,7 +105,7 @@ Question* TestParser::parseMultipleChoice(const QStringList& parts, const QStrin
     // Формат: multiple;текст;баллы;кол-во вариантов;правильные_индексы;вар1;вар2;...
     if (parts.size() < 6) {
         qWarning() << "Недостаточно данных для multiple choice:" << parts.join(";");
-        return nullptr;
+        return NULL;
     }
 
     int optionsCount = parts[3].toInt();
@@ -158,7 +143,7 @@ Question* TestParser::parseTextQuestion(const QStringList& parts, const QString&
     // Формат: text;текст;баллы;1;правильный_ответ
     if (parts.size() < 5) {
         qWarning() << "Недостаточно данных для text question:" << parts.join(";");
-        return nullptr;
+        return NULL;
     }
 
     QString correctAnswer = parts[4].trimmed();

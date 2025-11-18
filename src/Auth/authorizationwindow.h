@@ -13,7 +13,7 @@ class AuthorizationWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit AuthorizationWindow(FileManager* fm, QWidget *parent = nullptr);
+    explicit AuthorizationWindow(FileManager* fm, QWidget *parent = NULL);
     ~AuthorizationWindow();
 
 private slots:

@@ -3,7 +3,7 @@
 #include <QDebug>
 #include <QDir>
 
-bool FileManager::initDataDirectory() {
+FileManager::FileManager() {
     qDebug() << "Initializing FileManager...";
     qDebug() << "Data directory:" << dataDir;
 
@@ -13,7 +13,6 @@ bool FileManager::initDataDirectory() {
         qDebug() << "Creating data directory...";
         if (!dir.mkpath(dataDir)) {
             qCritical() << "Failed to create data directory:" << dataDir;
-            return false;
         }
     }
 
@@ -22,445 +21,325 @@ bool FileManager::initDataDirectory() {
         qDebug() << "Creating tests directory...";
         if (!dir.mkpath(testsDataDir)) {
             qCritical() << "Failed to create tests directory:" << testsDataDir;
-            return false;
         }
     }
 
-    // 3. Создаем необходимые файлы
+    usersFile = new UsersFile(dataDir + "/users.txt");
+    testsFile = new TestsFile(dataDir + "/tests.txt", testsDataDir);
+    resultsFile = new ResultsFile(dataDir + "/results.txt");
+
     if (!createDefaultFiles()) {
         qCritical() << "Failed to create default files";
-        return false;
     }
 
     qDebug() << "FileManager initialized successfully";
-    return true;
 }
 
+FileManager::~FileManager() {
+    delete usersFile;
+    delete testsFile;
+    delete resultsFile;
+}
 
 bool FileManager::createDefaultFiles()
 {
-    QFile uFile(usersFile);
-    QFile tFile(testsFile);
-    QFile rFile(resultsFile);
+    if (!usersFile->exists() && !usersFile->create()) return false;
+    if (!testsFile->exists() && !testsFile->create()) return false;
+    if (!resultsFile->exists() && !resultsFile->create()) return false;
+    return true;
+}
 
-    // Создаем файлы если они не существуют
-    bool success = true;
+bool FileManager::saveUser(NamedUser* user) {
+    return usersFile->saveUser(user);
+}
 
-    if (!uFile.exists()) {
-        if (!uFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            qCritical() << "Cannot create users file:" << usersFile;
-            success = false;
-        } else {
-            uFile.close();
-        }
+NamedUser* FileManager::loadUser(const QString& login) {
+    return usersFile->loadUser(login);
+}
+
+bool FileManager::checkUser(const User* in) {
+    NamedUser* user = usersFile->loadUser(in->getLogin());
+    if (user != NULL) {
+        bool passwordMatch = (user->getPassword() == in->getPassword());
+        delete user;
+        return passwordMatch;
     }
+    return false;
+}
 
-    if (!tFile.exists()) {
-        if (!tFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            qCritical() << "Cannot create tests file:" << testsFile;
-            success = false;
-        } else {
-            tFile.close();
-        }
-    }
+bool FileManager::userExists(const QString& login) {
+    return usersFile->userExists(login);
+}
 
-    if (!rFile.exists()) {
-        if (!rFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            qCritical() << "Cannot create results file:" << resultsFile;
-            success = false;
-        } else {
-            rFile.close();
+QList<NamedUser*> FileManager::loadAllUsers() {
+    return usersFile->loadAllUsers();
+}
+
+// ==================== РАБОТА С ТЕСТАМИ ====================
+
+bool FileManager::saveTest(Test* test) {
+    test->setId(getNextTestId());
+
+    int realQuestionCount = test->getQuestionCount();
+    int realMaxScore = test->getMaxScore();
+
+    qDebug() << "Сохранение теста:" << test->getTitle()
+             << "Вопросов:" << realQuestionCount
+             << "Макс. балл:" << realMaxScore;
+
+    bool success = testsFile->saveTestRecord(
+        test->getId(),
+        test->getTitle(),
+        test->getSubject(),
+        test->getTeacherLogin(),
+        realQuestionCount,
+        realMaxScore
+        );
+
+    if (success) {
+        QString testFilename = testsDataDir + "/test_" + QString::number(test->getId()) + ".txt";
+        QFile testFile(testFilename);
+        if (testFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream out(&testFile);
+
+            out << test->getTitle() << ";"
+                << test->getSubject() << ";"
+                << test->getTeacherLogin() << "\n";
+
+            const QList<Question*>& questions = test->getQuestions();
+            for (Question* question : questions) {
+                if (SingleChoiceQuestion* scq = dynamic_cast<SingleChoiceQuestion*>(question)) {
+                    out << "single;" << scq->getQuestionText() << ";"
+                        << scq->getPoints() << ";" << scq->getOptions().size() << ";"
+                        << scq->getCorrectIndex() << ";";
+                    for (const QString& option : scq->getOptions()) {
+                        out << option << ";";
+                    }
+                    out << "\n";
+                } else if (MultipleChoiceQuestion* mcq = dynamic_cast<MultipleChoiceQuestion*>(question)) {
+                    out << "multiple;" << mcq->getQuestionText() << ";"
+                        << mcq->getPoints() << ";" << mcq->getOptions().size() << ";"
+                        << mcq->getCorrectIndices() << ";";
+                    for (const QString& option : mcq->getOptions()) {
+                        out << option << ";";
+                    }
+                    out << "\n";
+                } else if (TextQuestion* tq = dynamic_cast<TextQuestion*>(question)) {
+                    out << "text;" << tq->getQuestionText() << ";"
+                        << tq->getPoints() << ";1;"
+                        << tq->getCorrectAnswer() << "\n";
+                }
+            }
+            testFile.close();
+            qDebug() << "Тест сохранен в файл:" << testFilename;
         }
     }
 
     return success;
 }
 
-bool FileManager::saveUser(NamedUser* user)
-{
-    QFile file(usersFile);
-    if (!file.open(QIODevice::Append | QIODevice::Text)) {
-        qWarning() << "Cannot open users file for writing:" << usersFile;
-        return false;
-    }
-
-    QTextStream out(&file);
-    out << user->toFileString() << "\n";
-    file.close();
-
-    return true;
+QList<TestInfo*> FileManager::loadAllTestInfos() {
+    return testsFile->loadAllTestInfos();
 }
 
-NamedUser* FileManager::loadUser(const QString& login)
-{
-    QFile file(usersFile);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Cannot open users file for reading:" << usersFile;
-        return nullptr;
-    }
+QList<TestInfo*> FileManager::loadTestInfosByTeacher(const QString& teacherLogin) {
+    QList<TestInfo*> allInfos = loadAllTestInfos();
+    QList<TestInfo*> teacherInfos;
 
-    QTextStream in(&file);
-    while (!in.atEnd()) {
-        QString line = in.readLine().trimmed();
-        if (line.isEmpty()) continue;
-
-        QStringList parts = line.split(";");
-        if (parts.size() < 3) continue;
-
-        QString role = parts[0];
-        QString userLogin = parts[1];
-
-        if (userLogin == login) {
-            if (role == "student" && parts.size() >= 4) {
-                return new Student(parts[1], parts[2], parts[3]);
-            } else if (role == "teacher" && parts.size() >= 5) {
-                return new Teacher(parts[1], parts[2], parts[3], parts[4]);
-            }
+    for (TestInfo* info : allInfos) {
+        if (info->getTeacherLogin() == teacherLogin) {
+            teacherInfos.append(info);
+        } else {
+            delete info;
         }
     }
 
-    file.close();
-    return nullptr;
+    return teacherInfos;
 }
 
-bool FileManager::userExists(const QString& login) {
-    NamedUser* user = loadUser(login);
-    return user != NULL;
-}
+QList<TestInfo*> FileManager::loadTestInfosBySubject(const QString& subject) {
+    QList<TestInfo*> allInfos = loadAllTestInfos();
+    QList<TestInfo*> subjectInfos;
 
-bool FileManager::checkUser(const User* in)
-{
-    NamedUser* user = loadUser(in->getLogin());
-    if (user != nullptr) {
-        return user->getPassword() == in->getPassword();
-    }
-    return false;
-}
-
-
-// ==================== РАБОТА С ТЕСТАМИ ====================
-
-bool FileManager::saveTest(Test* test) {
-    // Сохраняем основную информацию о тесте в tests.txt
-    QFile file(testsFile);
-    if (!file.open(QIODevice::Append | QIODevice::Text)) {
-        qWarning() << "Cannot open tests file for writing:" << testsFile;
-        return false;
-    }
-
-    int id = getNextTestId();
-    test->setId(id);
-
-    QTextStream out(&file);
-    out << test->getId() << ";"
-        << test->getTitle() << ";"
-        << test->getSubject() << ";"
-        << test->getTeacherLogin() << ";"
-        << "test_" << test->getId() << ".txt"
-        << "\n";
-    file.close();
-
-    // Сохраняем сам тест в CSV формате в папке tests/
-    QString testFilename = testsDataDir + "/test_" + QString::number(test->getId()) + ".txt";
-    QFile testFile(testFilename);
-    if (!testFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qWarning() << "Cannot open test data file:" << testFilename;
-        return false;
-    }
-
-    QTextStream testOut(&testFile);
-
-    // Заголовок теста (первая строка)
-    testOut << test->getTitle() << ";"
-            << test->getSubject() << ";"
-            << test->getTeacherLogin() << "\n";
-
-    // Вопросы (последующие строки)
-    const QList<Question*>& questions = test->getQuestions();
-    for (Question* question : questions) {
-        if (SingleChoiceQuestion* scq = dynamic_cast<SingleChoiceQuestion*>(question)) {
-            testOut << "single;"
-                    << scq->getQuestionText() << ";"
-                    << scq->getPoints() << ";"
-                    << scq->getOptions().size() << ";"
-                    << scq->getCorrectIndex() << ";";
-
-            // Варианты ответов
-            for (const QString& option : scq->getOptions()) {
-                testOut << option << ";";
-            }
-            testOut << "\n";
-
-        } else if (MultipleChoiceQuestion* mcq = dynamic_cast<MultipleChoiceQuestion*>(question)) {
-            testOut << "multiple;"
-                    << mcq->getQuestionText() << ";"
-                    << mcq->getPoints() << ";"
-                    << mcq->getOptions().size() << ";"
-                    << mcq->getCorrectIndices();
-
-            // Варианты ответов
-            for (const QString& option : mcq->getOptions()) {
-                testOut << option << ";";
-            }
-            testOut << "\n";
-
-        } else if (TextQuestion* tq = dynamic_cast<TextQuestion*>(question)) {
-            testOut << "text;"
-                    << tq->getQuestionText() << ";"
-                    << tq->getPoints() << ";"
-                    << "1;"
-                    << tq->getCorrectAnswers().first() << "\n";
+    for (TestInfo* info : allInfos) {
+        if (info->getSubject() == subject) {
+            subjectInfos.append(info);
+        } else {
+            delete info;
         }
     }
 
-    testFile.close();
-
-    qDebug() << "Test saved in CSV format. ID:" << test->getId() << "File:" << testFilename;
-    return true;
+    return subjectInfos;
 }
 
-Test* FileManager::loadTest(int testId) {
-    // Загружаем основную информацию о тесте
-    QFile file(testsFile);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Cannot open tests file for reading:" << testsFile;
-        return nullptr;
-    }
-
-    QTextStream in(&file);
-    while (!in.atEnd()) {
-        QString line = in.readLine().trimmed();
-        if (line.isEmpty()) continue;
-
-        QStringList parts = line.split(';');
-        if (parts.size() < 5) continue;
-
-        bool ok;
-        int currentId = parts[0].toInt(&ok);
-        if (!ok || currentId != testId) continue;
-
-        QString title = parts[1];
-        QString subject = parts[2];
-        QString teacherLogin = parts[3];
-        QString testDataFile = parts[4];
-
-        // Загружаем тест через TestParser
-        QString testFilename = testsDataDir + "/" + testDataFile;
-        TestParser parser;
-        Test* test = parser.parseTestFromFile(testFilename, teacherLogin);
-
-        if (test) {
-            // Устанавливаем правильный ID
-            test->setId(testId);
-        }
-
-        file.close();
-        return test;
-    }
-
-    file.close();
-    return NULL;
-}
-
-QList<Test*> FileManager::loadAllTests() {
-    QList<Test*> tests;
-
-    if (!QFile::exists(testsFile)) {
-        qWarning() << "Tests file doesn't exist:" << testsFile;
-        return tests;
-    }
-
-    QFile file(testsFile);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Cannot open tests file for reading:" << testsFile;
-        return tests;
-    }
-
-    QTextStream in(&file);
-    while (!in.atEnd()) {
-        QString line = in.readLine().trimmed();
-        if (line.isEmpty()) continue;
-
-        QStringList parts = line.split(';');
-        if (parts.size() < 5) continue;
-
-        bool ok;
-        int testId = parts[0].toInt(&ok);
-        if (!ok) continue;
-
-        QString title = parts[1];
-        QString subject = parts[2];
-        QString teacherLogin = parts[3];
-        QString testDataFile = parts[4];
-
-        QString testFilename = testsDataDir + "/" + testDataFile;
-        if (QFile::exists(testFilename)) {
-            TestParser parser;
-            Test* test = parser.parseTestFromFile(testFilename, teacherLogin);
-            if (test) {
-                test->setId(testId);
-                tests.append(test);
-            }
-        }
-    }
-
-    file.close();
-    return tests;
-}
-
-Test* FileManager::importTestFromFile(const QString& filename, const QString& teacherLogin, QString& errorMessage) {
-    TestParser parser;
-    Test* test = parser.parseTestFromFile(filename, teacherLogin);
-
-    if (!test) {
-        errorMessage = parser.getLastError();
-        return nullptr;
-    }
-
-    // Устанавливаем ID
-    int testId = getNextTestId();
-    test->setId(testId);
-
-    // Копируем файл теста в папку data/tests/
-    QString destFilename = testsDataDir + "/test_" + QString::number(testId) + ".txt";
-    if (QFile::copy(filename, destFilename)) {
-        qDebug() << "Test file copied to:" << destFilename;
-
-        // Сохраняем запись о тесте
-        QFile file(testsFile);
-        if (!file.open(QIODevice::Append | QIODevice::Text)) {
-            errorMessage = "Не удалось открыть файл тестов для записи";
-            delete test;
-            return nullptr;
-        }
-
-        QTextStream out(&file);
-        out << testId << ";"
-            << test->getTitle() << ";"
-            << test->getSubject() << ";"
-            << teacherLogin << ";"
-            << "test_" << testId << ".txt"
-            << "\n";
-        file.close();
-
-        qDebug() << "Test imported successfully. ID:" << testId << "Questions:" << parser.getSuccessfullyParsed();
-        return test;
-    } else {
-        errorMessage = "Не удалось скопировать файл теста в data/tests/";
-        delete test;
-        return nullptr;
-    }
-}
-
-QList<Test*> FileManager::loadTestsByTeacher(const QString& teacherLogin) {
-    QList<Test*> tests = loadAllTests();
-
-    for (int i = 0; i < tests.size(); i++) {
-        if (tests[i]->getTeacherLogin() != teacherLogin) {
-            tests.remove(i);
-        }
-    }
-    return tests;
+Test* FileManager::loadFullTest(int testId) {
+    return testsFile->loadTest(testId);
 }
 
 int FileManager::getNextTestId() {
-    if (!QFile::exists(testsFile)) {
-        return 1;
-    }
-
-    QFile file(testsFile);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return 1;
-    }
-
-    int maxId = 0;
-    QTextStream in(&file);
-
-    while (!in.atEnd()) {
-        QString line = in.readLine().trimmed();
-        if (line.isEmpty()) continue;
-
-        QStringList parts = line.split(';');
-        if (parts.size() < 1) continue;
-
-        bool ok;
-        int currentId = parts[0].toInt(&ok);
-
-        if (ok && currentId > maxId) {
-            maxId = currentId;
-        }
-    }
-    file.close();
-
-    return maxId + 1;
+    return testsFile->getNextId();
 }
 
 bool FileManager::deleteTest(int testId) {
-    if (!QFile::exists(testsFile)) {
-        qWarning() << "Tests file doesn't exist";
+    if (!testsFile->removeTest(testId)) {
+        qWarning() << "Failed to remove test record. ID:" << testId;
         return false;
     }
 
-    // Читаем все тесты, исключая удаляемый
-    QList<QString> remainingTests;
-    bool testFound = false;
-
-    QFile file(testsFile);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Cannot open tests file for reading:" << testsFile;
-        return false;
-    }
-
-    QTextStream in(&file);
-    while (!in.atEnd()) {
-        QString line = in.readLine().trimmed();
-        if (line.isEmpty()) continue;
-
-        QStringList parts = line.split(';');
-        if (parts.size() < 5) continue;
-
-        bool ok;
-        int currentId = parts[0].toInt(&ok);
-
-        if (ok && currentId == testId) {
-            testFound = true;
-            // Пропускаем удаляемый тест
-            continue;
-        }
-
-        remainingTests.append(line);
-    }
-    file.close();
-
-    if (!testFound) {
-        qWarning() << "Test not found for deletion. ID:" << testId;
-        return false;
-    }
-
-    // Перезаписываем файл без удаленного теста
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qWarning() << "Cannot open tests file for writing:" << testsFile;
-        return false;
-    }
-
-    QTextStream out(&file);
-    for (const QString& testLine : remainingTests) {
-        out << testLine << "\n";
-    }
-    file.close();
-
-    // Удаляем файл теста
     QString testFilename = testsDataDir + "/test_" + QString::number(testId) + ".txt";
     if (QFile::exists(testFilename)) {
         if (!QFile::remove(testFilename)) {
             qWarning() << "Failed to remove test data file:" << testFilename;
-            // Не считаем это критической ошибкой - основная запись уже удалена
         } else {
             qDebug() << "Test data file removed:" << testFilename;
         }
+    }
+
+    if (!resultsFile->removeResults(testId)) {
+        qWarning() << "Failed to remove test results. ID:" << testId;
     }
 
     qDebug() << "Test deleted successfully. ID:" << testId;
     return true;
 }
 
+// ==================== РАБОТА С РЕЗУЛЬТАТАМИ ====================
+
+bool FileManager::saveTestResult(const QString& studentLogin, int testId, double score) {
+    return resultsFile->save(studentLogin, testId, score);
+}
+
+bool FileManager::saveTestResult(const Result& result) {
+    return resultsFile->save(result);
+}
+
+double FileManager::calculateTestAverage(int testId) {
+    return resultsFile->getAverage(testId);
+}
+
+QList<Result> FileManager::getTestResults(int testId) {
+    return resultsFile->getResults(testId);
+}
+
+QList<Result> FileManager::getStudentResults(const QString& studentLogin) {
+    return resultsFile->getStudentResults(studentLogin);
+}
+
+int FileManager::getTestAttemptCount(int testId) {
+    return resultsFile->getAttemptCount(testId);
+}
+
+double FileManager::getTestAverageScore(int testId) {
+    return calculateTestAverage(testId);
+}
+
+double FileManager::calculateStudentAverage(const QString& studentLogin) {
+    QList<Result> results = getStudentResults(studentLogin);
+
+    if (results.isEmpty()) {
+        return 0.0;
+    }
+
+    double totalScore = 0.0;
+    int testCount = 0;
+    QSet<int> processedTests;
+
+    for (const Result& result : results) {
+        if (!processedTests.contains(result.getTestId())) {
+            double bestScore = getStudentBestScoreForTest(studentLogin, result.getTestId());
+            totalScore += bestScore;
+            testCount++;
+            processedTests.insert(result.getTestId());
+        }
+    }
+
+    return testCount > 0 ? totalScore / testCount : 0.0;
+}
+
+QMap<int, double> FileManager::getStudentCompletedTests(const QString& studentLogin) {
+    QMap<int, double> completedTests;
+    QList<Result> results = getStudentResults(studentLogin);
+
+    for (const Result& result : results) {
+        int testId = result.getTestId();
+        double score = result.getScore();
+
+        if (!completedTests.contains(testId) || score > completedTests[testId]) {
+            completedTests[testId] = score;
+        }
+    }
+
+    return completedTests;
+}
+
+bool FileManager::hasStudentCompletedTest(const QString& studentLogin, int testId) {
+    return getStudentBestScoreForTest(studentLogin, testId) >= 0;
+}
+
+double FileManager::getStudentBestScoreForTest(const QString& studentLogin, int testId) {
+    QList<Result> results = getStudentResults(studentLogin);
+    double bestScore = -1; // -1 если тест не пройден
+
+    for (const Result& result : results) {
+        if (result.getTestId() == testId && result.getScore() > bestScore) {
+            bestScore = result.getScore();
+        }
+    }
+
+    return bestScore;
+}
+
+// ==================== ИМПОРТ ТЕСТА ====================
+
+bool FileManager::importTestFromFile(const QString& filename, const QString& teacherLogin, QString& errorMessage) {
+    QString title, subject;
+    if (!extractTestMetadata(filename, title, subject, errorMessage)) {
+        return false;
+    }
+
+    // Парсим тест из файла
+    Test* test = new Test(-1, title, subject, teacherLogin);
+    TestParser parser;
+    parser.parseTestQuestions(filename, test);
+
+    bool success = saveTest(test);
+
+    if (success) {
+        qDebug() << "Test imported successfully. ID:" << test->getId();
+    } else {
+        errorMessage = "Не удалось сохранить тест в систему";
+    }
+
+    delete test;
+    return success;
+}
+
+bool FileManager::extractTestMetadata(const QString& filename, QString& title, QString& subject, QString& errorMessage) {
+    QFile file(filename);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        errorMessage = "Не удалось открыть файл теста: " + filename;
+        return false;
+    }
+
+    QTextStream in(&file);
+
+    if (in.atEnd()) {
+        errorMessage = "Файл теста пуст";
+        file.close();
+        return false;
+    }
+
+    QString headerLine = in.readLine().trimmed();
+    file.close();
+
+    QStringList parts = headerLine.split(';');
+    if (parts.size() < 3) {
+        errorMessage = "Неверный формат заголовка теста. Ожидается: название;предмет;логин";
+        return false;
+    }
+
+    title = parts[0].trimmed();
+    subject = parts[1].trimmed();
+
+    return true;
+}

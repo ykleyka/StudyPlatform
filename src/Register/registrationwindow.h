@@ -12,7 +12,7 @@ class RegistrationWindow : public QDialog
     Q_OBJECT
 
 public:
-    explicit RegistrationWindow(FileManager* fm, QWidget *parent = nullptr);
+    explicit RegistrationWindow(FileManager* fm, QWidget *parent = NULL);
     ~RegistrationWindow();
     bool checkName(const QString& name);
 

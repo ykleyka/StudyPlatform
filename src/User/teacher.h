@@ -11,7 +11,6 @@ public:
     Teacher(const QString& login, const QString& password, const QString& name, const QString& subject) :
         NamedUser(login, password, name), subject(subject) {}
     QString getRole() const override { return "teacher"; }
-    QString getName() const { return name; }
     QString getSubject() const { return subject; }
     QString toFileString() const override;
 };

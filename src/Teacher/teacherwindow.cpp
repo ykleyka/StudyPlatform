@@ -18,9 +18,9 @@ TeacherWindow::~TeacherWindow()
 
 void TeacherWindow::refreshTable() {
     ui->testsTable->setRowCount(0);
-    QList<Test*> teacherTests = fm->loadTestsByTeacher(user->getLogin());
+    QList<TestInfo*> teacherTests = fm->loadTestInfosByTeacher(user->getLogin());
 
-    for (Test* test : teacherTests) {
+    for (TestInfo* test : teacherTests) {
         int row = ui->testsTable->rowCount();
         ui->testsTable->insertRow(row);
 
@@ -28,25 +28,29 @@ void TeacherWindow::refreshTable() {
         ui->testsTable->setItem(row, 1, new QTableWidgetItem(test->getTitle()));
         ui->testsTable->setItem(row, 2, new QTableWidgetItem(test->getSubject()));
         ui->testsTable->setItem(row, 3, new QTableWidgetItem(QString::number(test->getQuestionCount())));
-        /* Колонки с результатами тестов
-        int attempts = fm->getTestAttemptCount(test->getId());
-        double avgScore = fm->getTestAverageScore(test->getId());
-
-        ui->testsTable->setItem(row, 4, new QTableWidgetItem(QString::number(attempts)));
-        ui->testsTable->setItem(row, 5, new QTableWidgetItem(QString::number(avgScore, 'f', 1)));
-        */
+        ui->testsTable->setItem(row, 4, new QTableWidgetItem(QString::number(fm->getTestAttemptCount(test->getId()))));
+        ui->testsTable->setItem(row, 5, new QTableWidgetItem(QString::number(fm->getTestAverageScore(test->getId()), 'f', 1)));
     }
 }
 
 void TeacherWindow::on_importButton_clicked() {
-    TestParser parser;
-    QFileDialog file;
-    QString fileName = file.getOpenFileName(this, "Открыть файл", "", "Файлы (*.txt)");
-    if (!fileName.isEmpty()) {
-        Test* test = parser.parseTestFromFile(fileName, user->getLogin());
-        fm->saveTest(test);
+    QString filename = QFileDialog::getOpenFileName(this,
+                                                    "Выберите файл теста",
+                                                    QDir::homePath(),
+                                                    "Text files (*.txt);;All files (*.*)");
+
+    if (filename.isEmpty()) return;
+
+    QString errorMessage;
+    bool success = fm->importTestFromFile(filename, user->getLogin(), errorMessage);
+
+    if (success) {
+        QMessageBox::information(this, "Успех", "Тест успешно импортирован!");
+        refreshTable();
+    } else {
+        QMessageBox::warning(this, "Ошибка импорта",
+                             "Не удалось импортировать тест:\n" + errorMessage);
     }
-    refreshTable();
 }
 
 int TeacherWindow::getSelectedTestId() const {
@@ -55,7 +59,6 @@ int TeacherWindow::getSelectedTestId() const {
         return -1;
     }
 
-    // Берем первую выбранную строку
     int row = selectedItems.first()->row();
     QTableWidgetItem* idItem = ui->testsTable->item(row, 0);
 

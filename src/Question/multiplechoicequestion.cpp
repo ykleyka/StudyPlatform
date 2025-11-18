@@ -14,8 +14,8 @@ bool MultipleChoiceQuestion::checkAnswer(const QString& answer) const {
 
     std::sort(selected.begin(), selected.end());
     QList<int> sortedCorrect = correctIndices;
-    std::sort(sortedCorrect.begin(), sortedCorrect.end());
 
+    std::sort(sortedCorrect.begin(), sortedCorrect.end());
     return selected == sortedCorrect;
 }
 

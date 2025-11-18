@@ -12,8 +12,8 @@ int main(int argc, char *argv[]) {
     QApplication qtApp(argc, argv);
 
     FileManager* fm = new FileManager();
-    if (!fm || !fm->initDataDirectory()) {
-        QMessageBox::critical(nullptr, "Ошибка инициализации",
+    if (!fm) {
+        QMessageBox::critical(NULL, "Ошибка инициализации",
                               "Не удалось инициализировать систему данных.\n"
                               "Проверьте права доступа к файлам.");
         return -1;

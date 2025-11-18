@@ -3,7 +3,6 @@
 
 #include "../User/teacher.h"
 #include "../filemanager.h"
-#include "../Test/testparser.h"
 #include <QFileDialog>
 #include <QDialog>
 #include <QMessageBox>
@@ -17,7 +16,7 @@ class TeacherWindow : public QDialog
     Q_OBJECT
 
 public:
-    explicit TeacherWindow(FileManager* fm, Teacher* user, QWidget *parent = nullptr);
+    explicit TeacherWindow(FileManager* fm, Teacher* user, QWidget *parent = NULL);
     ~TeacherWindow();
 
 private slots:
@@ -38,7 +37,7 @@ private:
     void populateTestsTable();
     int getSelectedTestId() const;
     void updateInfoLabel();
-    void applySearchFilter(const QString& searchText); // ✅ Новый метод
+    void applySearchFilter(const QString& searchText);
 };
 
 #endif // TEACHERWINDOW_H

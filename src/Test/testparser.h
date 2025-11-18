@@ -19,13 +19,14 @@ private:
 public:
     TestParser();
 
-    Test* parseTestFromFile(const QString& filename, const QString& teacherLogin);
+    void parseTestQuestions(QString filename, Test* test);
 
     QString getLastError() const { return lastError; }
     int getSuccessfullyParsed() const { return successfullyParsed; }
 
 private:
     void setError(const QString& error);
+
     Question* parseQuestionLine(const QString& line);
     Question* parseSingleChoice(const QStringList& parts, const QString& text, int points);
     Question* parseMultipleChoice(const QStringList& parts, const QString& text, int points);

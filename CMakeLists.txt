@@ -44,6 +44,14 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         src/Question/textquestion.h src/Question/textquestion.cpp
         src/Test/testparser.h src/Test/testparser.cpp
         src/Teacher/teacherwindow.ui
+        src/File/file.h src/File/file.cpp
+        src/File/usersfile.h src/File/usersfile.cpp
+        src/File/testsfile.h src/File/testsfile.cpp
+        src/File/resultsfile.h src/File/resultsfile.cpp
+        src/Test/result.h src/Test/result.cpp
+        src/Lesson/testwindow.h src/Lesson/testwindow.cpp src/Lesson/testwindow.ui
+        src/Test/testinfo.h src/Test/testinfo.cpp
+
 
 
 

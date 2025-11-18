@@ -14,7 +14,6 @@ public:
     }
 
     bool checkAnswer(const QString& answer) const override {
-        // Сравниваем без учета регистра и лишних пробелов
         return answer.trimmed().compare(correctAnswer.trimmed(), Qt::CaseInsensitive) == 0;
     }
 
