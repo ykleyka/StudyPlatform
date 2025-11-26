@@ -97,7 +97,7 @@ QPushButton:disabled {
      <item>
       <widget class="QPushButton" name="statsButton">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="styleSheet">
         <string notr="true">QPushButton {
@@ -126,7 +126,7 @@ QPushButton:disabled {
      <item>
       <widget class="QPushButton" name="previewButton">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="styleSheet">
         <string notr="true">QPushButton {

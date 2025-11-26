@@ -10,7 +10,9 @@ private:
 
 public:
     MultipleChoiceQuestion(const QString& text, int pts, const QStringList& opts, const QList<int>& correctIndices)
-        : ChoiceQuestion(text, pts, opts), correctIndices(correctIndices) {}
+        : ChoiceQuestion(text, pts, opts), correctIndices(correctIndices) {
+        questionType = "multipleChoice";
+    }
 
     bool checkAnswer(const QString& answer) const override;
     QStringList getCorrectAnswers() const override;
@@ -18,7 +20,7 @@ public:
     QString getCorrectIndices() const {
         QString res;
         for (int idx : correctIndices) {
-            res.append(QString::number(idx) + ";");
+            res.append(QString::number(idx) + ",");
         }
         return res;
     }

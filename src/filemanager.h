@@ -36,9 +36,11 @@ public:
     // Работа с тестами
     bool saveTest(Test* test);
     Test* loadFullTest(int testId);
+    TestInfo* loadTestInfo(int testId);
     QList<TestInfo*> loadAllTestInfos();
     QList<TestInfo*> loadTestInfosByTeacher(const QString& teacherLogin);
     QList<TestInfo*> loadTestInfosBySubject(const QString& subject);
+    bool isUniqueTestTitle(const QString& title);
     int getNextTestId();
     bool deleteTest(int testId);
 
@@ -50,7 +52,6 @@ public:
     QList<Result> getStudentResults(const QString& studentLogin);
     int getTestAttemptCount(int testId);
     double getTestAverageScore(int testId);
-
     double calculateStudentAverage(const QString& studentLogin);
     QMap<int, double> getStudentCompletedTests(const QString& studentLogin);
     bool hasStudentCompletedTest(const QString& studentLogin, int testId);
@@ -58,9 +59,6 @@ public:
 
     // Импорт теста
     bool importTestFromFile(const QString& filename, const QString& teacherLogin, QString& errorMessage);
-
-private:
     bool extractTestMetadata(const QString& filename, QString& title, QString& subject, QString& errorMessage);
-
 };
 #endif // FILEMANAGER_H

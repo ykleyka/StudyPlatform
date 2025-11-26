@@ -835,5 +835,70 @@
   </widget>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>loginLine</sender>
+   <signal>returnPressed()</signal>
+   <receiver>passLine</receiver>
+   <slot>setFocus()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>202</x>
+     <y>137</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>202</x>
+     <y>248</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>passLine</sender>
+   <signal>returnPressed()</signal>
+   <receiver>passConfirmLine</receiver>
+   <slot>setFocus()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>304</x>
+     <y>227</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>268</x>
+     <y>309</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>passConfirmLine</sender>
+   <signal>returnPressed()</signal>
+   <receiver>nameLine</receiver>
+   <slot>setFocus()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>215</x>
+     <y>326</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>224</x>
+     <y>395</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>nameLine</sender>
+   <signal>returnPressed()</signal>
+   <receiver>regButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>281</x>
+     <y>398</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>366</x>
+     <y>626</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

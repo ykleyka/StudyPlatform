@@ -2,6 +2,8 @@
 #define TEACHERWINDOW_H
 
 #include "../User/teacher.h"
+#include "statswindow.h"
+#include "../Lesson/testwindow.h"
 #include "../filemanager.h"
 #include <QFileDialog>
 #include <QDialog>

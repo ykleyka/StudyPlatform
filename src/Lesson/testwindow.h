@@ -40,7 +40,6 @@ private:
     void showQuestion(int index);
     void setupSingleChoiceQuestion(SingleChoiceQuestion* question);
     void setupMultipleChoiceQuestion(MultipleChoiceQuestion* question);
-    void setupTextQuestion(TextQuestion* question);
     void saveCurrentAnswer();
     void loadCurrentAnswer();
     void updateNavigationButtons();

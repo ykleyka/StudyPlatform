@@ -26,7 +26,6 @@ TestWindow::TestWindow(FileManager* fm, Student* student, int testId, QWidget *p
     // Инициализируем массив ответов
     studentAnswers.fill("", test->getQuestionCount());
 
-    // Настраиваем интерфейс
     ui->testTitleLabel->setText(test->getTitle());
     showQuestion(0);
 }
@@ -48,16 +47,13 @@ void TestWindow::showQuestion(int index)
     Question* question = test->getQuestions()[index];
     ui->questionTextLabel->setText(question->getQuestionText());
 
-    // Обновляем прогресс
     ui->progressLabel->setText(
         QString("Вопрос %1 из %2\n%3 баллов").arg(index + 1).arg(test->getQuestionCount()).arg(question->getPoints())
     );
 
-    // Очищаем предыдущие варианты ответов
     clearAnswerWidgets();
     ui->textAnswerField->clear();
 
-    // Настраиваем интерфейс в зависимости от типа вопроса
     if (SingleChoiceQuestion* scq = dynamic_cast<SingleChoiceQuestion*>(question)) {
         setupSingleChoiceQuestion(scq);
         ui->answerStackWidget->setCurrentIndex(0);
@@ -65,14 +61,12 @@ void TestWindow::showQuestion(int index)
         setupMultipleChoiceQuestion(mcq);
         ui->answerStackWidget->setCurrentIndex(1);
     } else if (TextQuestion* tq = dynamic_cast<TextQuestion*>(question)) {
-        setupTextQuestion(tq);
+        // setup не нужен
         ui->answerStackWidget->setCurrentIndex(2);
     }
 
-    // Загружаем сохраненный ответ (если есть)
     loadCurrentAnswer();
 
-    // Обновляем кнопки навигации
     updateNavigationButtons();
 }
 
@@ -92,17 +86,8 @@ void TestWindow::clearAnswerWidgets()
     }
 
     // Очищаем группы кнопок
-    singleChoiceGroup->setExclusive(false); // Временно снимаем exclusive для очистки
-    QList<QAbstractButton*> singleButtons = singleChoiceGroup->buttons();
-    for (QAbstractButton* button : singleButtons) {
-        singleChoiceGroup->removeButton(button);
-    }
-    singleChoiceGroup->setExclusive(true);
-
-    QList<QAbstractButton*> multipleButtons = multipleChoiceGroup->buttons();
-    for (QAbstractButton* button : multipleButtons) {
-        multipleChoiceGroup->removeButton(button);
-    }
+    singleChoiceGroup->buttons().clear();
+    multipleChoiceGroup->buttons().clear();
 }
 
 void TestWindow::setupSingleChoiceQuestion(SingleChoiceQuestion* question)
@@ -129,12 +114,6 @@ void TestWindow::setupMultipleChoiceQuestion(MultipleChoiceQuestion* question)
     }
 }
 
-void TestWindow::setupTextQuestion(TextQuestion* question)
-{
-    qDebug() << "correct:" << question->getCorrectAnswers();
-    Q_UNUSED(question);
-}
-
 void TestWindow::saveCurrentAnswer()
 {
     if (currentQuestionIndex < 0 || currentQuestionIndex >= studentAnswers.size()) {
@@ -144,14 +123,12 @@ void TestWindow::saveCurrentAnswer()
     Question* question = test->getQuestions()[currentQuestionIndex];
     QString answer;
 
-    if (SingleChoiceQuestion* scq = dynamic_cast<SingleChoiceQuestion*>(question)) {
-        // Получаем выбранную кнопку через группу
+    if (question->getType() == "singleChoice") {
         QAbstractButton* selectedButton = singleChoiceGroup->checkedButton();
         if (selectedButton) {
             answer = QString::number(singleChoiceGroup->id(selectedButton));
         }
-    } else if (MultipleChoiceQuestion* mcq = dynamic_cast<MultipleChoiceQuestion*>(question)) {
-        // Собираем выбранные чекбоксы через группу
+    } else if (question->getType() == "multipleChoice") {
         QStringList selectedIndices;
         QList<QAbstractButton*> buttons = multipleChoiceGroup->buttons();
         for (QAbstractButton* button : buttons) {
@@ -160,11 +137,12 @@ void TestWindow::saveCurrentAnswer()
             }
         }
         answer = selectedIndices.join(",");
-    } else if (TextQuestion* tq = dynamic_cast<TextQuestion*>(question)) {
+    } else if (question->getType() == "text") {
         answer = ui->textAnswerField->text().trimmed();
     }
 
     studentAnswers[currentQuestionIndex] = answer;
+    qDebug() << answer;
 }
 
 void TestWindow::loadCurrentAnswer()
@@ -179,8 +157,7 @@ void TestWindow::loadCurrentAnswer()
     }
 
     Question* question = test->getQuestions()[currentQuestionIndex];
-
-    if (SingleChoiceQuestion* scq = dynamic_cast<SingleChoiceQuestion*>(question)) {
+    if (question->getType() == "singleChoice") {
         bool ok;
         int index = answer.toInt(&ok);
         if (ok) {
@@ -189,7 +166,7 @@ void TestWindow::loadCurrentAnswer()
                 button->setChecked(true);
             }
         }
-    } else if (MultipleChoiceQuestion* mcq = dynamic_cast<MultipleChoiceQuestion*>(question)) {
+    } else if (question->getType() == "multipleChoice") {
         QStringList indices = answer.split(',', Qt::SkipEmptyParts);
         for (const QString& indexStr : indices) {
             bool ok;
@@ -201,17 +178,15 @@ void TestWindow::loadCurrentAnswer()
                 }
             }
         }
-    } else if (TextQuestion* tq = dynamic_cast<TextQuestion*>(question)) {
+    } else if (question->getType() == "text") {
         ui->textAnswerField->setText(answer);
     }
 }
 
 void TestWindow::updateNavigationButtons()
 {
-    // Кнопка "Назад"
     ui->prevButton->setEnabled(currentQuestionIndex > 0);
 
-    // Кнопки "Далее" и "Завершить"
     bool isLastQuestion = (currentQuestionIndex == test->getQuestionCount() - 1);
     ui->nextButton->setVisible(!isLastQuestion);
     ui->submitButton->setVisible(isLastQuestion);
@@ -233,7 +208,6 @@ void TestWindow::on_submitButton_clicked()
 {
     saveCurrentAnswer();
 
-    // Подтверждение завершения теста
     QMessageBox::StandardButton reply = QMessageBox::question(
         this,
         "Завершение теста",
@@ -248,13 +222,10 @@ void TestWindow::on_submitButton_clicked()
 
 void TestWindow::calculateAndSaveResult()
 {
-    // Вычисляем результат
     int score = test->evaluateTest(studentAnswers);
     int maxScore = test->getMaxScore();
-
-    // Сохраняем результат
-    if (fm->saveTestResult(student->getLogin(), test->getId(), score)) {
-        // Показываем результат
+    // Передаём студента с пустым логином если вызываем через предпросмотр
+    if (student->getLogin() == "" || fm->saveTestResult(student->getLogin(), test->getId(), score)) {
         double percentage = maxScore > 0 ? (score * 100.0) / maxScore : 0;
         QString message = QString(
                               "Тест завершен!\n\n"

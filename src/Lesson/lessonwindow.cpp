@@ -99,6 +99,7 @@ void LessonWindow::on_startTestButton_clicked() {
         QObject::connect(testWindow, &TestWindow::testEnd,
                          [&]() { this->show(); });
     }
+    loadAvailableTests();
 }
 
 QString LessonWindow::formatTestItemText(TestInfo* test, double bestScore, bool isCompleted) {
@@ -136,7 +137,6 @@ void LessonWindow::on_searchButton_clicked() {
         loadAvailableTests();
         return;
     }
-
 
     for (int i = 0; i < ui->testsList->count(); ++i) {
         QListWidgetItem* item = ui->testsList->item(i);

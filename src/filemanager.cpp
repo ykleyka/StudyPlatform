@@ -138,6 +138,17 @@ bool FileManager::saveTest(Test* test) {
     return success;
 }
 
+TestInfo* FileManager::loadTestInfo(int testId) {
+    QList<TestInfo*> infos = testsFile->loadAllTestInfos();
+    TestInfo* reqInfo = NULL;
+    for (TestInfo* info : infos) {
+        if (info->getId() == testId) {
+            reqInfo = info;
+        } else delete info;
+    }
+    return reqInfo;
+};
+
 QList<TestInfo*> FileManager::loadAllTestInfos() {
     return testsFile->loadAllTestInfos();
 }
@@ -170,6 +181,16 @@ QList<TestInfo*> FileManager::loadTestInfosBySubject(const QString& subject) {
     }
 
     return subjectInfos;
+}
+
+bool FileManager::isUniqueTestTitle(const QString& title) {
+    QList<TestInfo*> allInfos = loadAllTestInfos();
+    bool res = true;
+    for (TestInfo* info : allInfos) {
+        if (title == info->getTitle()) res = false;
+        delete info;
+    }
+    return res;
 }
 
 Test* FileManager::loadFullTest(int testId) {

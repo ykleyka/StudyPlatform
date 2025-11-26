@@ -9,7 +9,9 @@ private:
 
 public:
     SingleChoiceQuestion(const QString& text, int pts, const QStringList& opts, int correctIdx)
-        : ChoiceQuestion(text, pts, opts), correctIndex(correctIdx) {}
+        : ChoiceQuestion(text, pts, opts), correctIndex(correctIdx) {
+        questionType = "singleChoice";
+    }
 
     bool checkAnswer(const QString& answer) const override {
         bool ok;

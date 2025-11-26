@@ -35,21 +35,60 @@ void TeacherWindow::refreshTable() {
 
 void TeacherWindow::on_importButton_clicked() {
     QString filename = QFileDialog::getOpenFileName(this,
-                                                    "Выберите файл теста",
-                                                    QDir::homePath(),
-                                                    "Text files (*.txt);;All files (*.*)");
+                                                    "Выберите файл теста", QDir::homePath(), "Text files (*.txt)");
 
     if (filename.isEmpty()) return;
+    QString title, fileSubject, errorMessage;
+    fm->extractTestMetadata(filename, title, fileSubject, errorMessage);
 
-    QString errorMessage;
-    bool success = fm->importTestFromFile(filename, user->getLogin(), errorMessage);
+    if (fileSubject.isEmpty() || title.isEmpty()) {
+        QMessageBox::warning(this, "Ошибка", "Не удалось определить предмет теста или его название\n" + errorMessage);
+        return;
+    }
 
-    if (success) {
-        QMessageBox::information(this, "Успех", "Тест успешно импортирован!");
+    if (fileSubject != user->getSubject()) {
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this,
+            "Предмет не совпадает",
+            QString("Этот тест по предмету \"%1\", а вы преподаете \"%2\".\n\n"
+                    "Рекомендуется добавлять тесты только по вашему предмету.\n"
+                    "Все равно добавить этот тест?")
+                .arg(fileSubject).arg(user->getSubject()),
+            QMessageBox::Yes | QMessageBox::No,
+            QMessageBox::No
+            );
+
+        if (reply != QMessageBox::Yes) {
+            return;
+        }
+    }
+
+    if (!fm->isUniqueTestTitle(title)) {
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this,
+            "Тест с таким названием уже существует",
+            QString("Тест с названием %1 уже существует в базе.\n"
+                    "Рекомендуется добавлять тесты с уникальными именами.\n"
+                    "Все равно добавить этот тест?")
+                .arg(fileSubject).arg(user->getSubject()),
+            QMessageBox::Yes | QMessageBox::No,
+            QMessageBox::No
+            );
+
+        if (reply != QMessageBox::Yes) {
+            return;
+        }
+    }
+
+    if (fm->importTestFromFile(filename, user->getLogin(), errorMessage)) {
+        QString message = QString("Тест успешно добавлен!\nПредмет: %1").arg(fileSubject);
+        if (fileSubject != user->getSubject()) {
+            message += "\n\n️ Обратите внимание: предмет теста отличается от вашего основного";
+        }
+        QMessageBox::information(this, "Успех", message);
         refreshTable();
     } else {
-        QMessageBox::warning(this, "Ошибка импорта",
-                             "Не удалось импортировать тест:\n" + errorMessage);
+        QMessageBox::warning(this, "Ошибка", "Не удалось добавить тест:\n" + errorMessage);
     }
 }
 
@@ -111,12 +150,38 @@ void TeacherWindow::on_deleteButton_clicked() {
     }
 }
 
-void TeacherWindow::on_statsButton_clicked() {
+void TeacherWindow::on_statsButton_clicked()
+{
+    int testId = getSelectedTestId();
+    if (testId == -1) {
+        QMessageBox::information(this, "Информация", "Выберите тест для просмотра статистики");
+        return;
+    }
 
+    // Получаем информацию о тесте
+    TestInfo* testInfo = fm->loadTestInfo(testId);
+    if (!testInfo) {
+        QMessageBox::warning(this, "Ошибка", "Не удалось загрузить информацию о тесте");
+        return;
+    }
+
+    StatsWindow* statsWindow = new StatsWindow(fm, testId, testInfo, this);
+    statsWindow->exec();
 }
 
 void TeacherWindow::on_previewButton_clicked() {
+    int testId = getSelectedTestId();
+    if (testId == -1) {
+        QMessageBox::information(this, "Информация", "Выберите тест для просмотра статистики");
+        return;
+    }
 
+    Student* student = new Student("", "", "");
+    TestWindow* testWindow = new TestWindow(fm, student, testId);
+    testWindow->show();
+    this->hide();
+    QObject::connect(testWindow, &TestWindow::testEnd,
+                         [&]() { this->show(); });
 }
 
 void TeacherWindow::on_refreshButton_clicked() {

@@ -51,6 +51,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         src/Test/result.h src/Test/result.cpp
         src/Lesson/testwindow.h src/Lesson/testwindow.cpp src/Lesson/testwindow.ui
         src/Test/testinfo.h src/Test/testinfo.cpp
+        src/Teacher/statswindow.h src/Teacher/statswindow.cpp src/Teacher/statswindow.ui
 
 
 
